@@ -1,0 +1,12 @@
+numpy
+
+matplotlib
+seaborn
+
+pandas
+
+scipy
+scikit-learn
+
+ipykernel
+tabulate
