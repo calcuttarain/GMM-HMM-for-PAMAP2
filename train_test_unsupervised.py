@@ -10,10 +10,18 @@ INPUT_FILE = 'data/pamap2_master.pkl'
 
 TRAIN_SUBS = [101, 102, 103, 104, 106, 107]
 TEST_SUBS  = [105, 108]
+
 KEEP_ACTIVITIES = [1, 2, 3, 4, 5, 6]
 
-N_STATES = 6
-N_MIXTURES = 4
+MIXTURES_CONFIG = {
+    1: 5,  # Lying 
+    2: 5,  # Sitting
+    3: 5,  # Standing
+    4: 5,  # Walking
+    5: 5,  # Running
+    6: 5   # Cycling
+}
+
 DOWNSAMPLE_FACTOR = 4  
 
 MODEL_FILENAME = 'unsupervised_hmm_pamap2.pkl'
@@ -61,16 +69,26 @@ def main():
     X_train, y_train, scaler = load_and_split_data(full_df, TRAIN_SUBS, is_train=True)
     
     T_train, D = X_train.shape
-    print(f"Train Data: {T_train} time steps, {D} dimensions")
+    
+    # double the states
+    N_STATES = len(KEEP_ACTIVITIES) * 2
+    
+    print(f"Train Data: {T_train} time steps, {D} dimensions. States: {N_STATES}")
+
+    base_mixtures = [MIXTURES_CONFIG[act] for act in KEEP_ACTIVITIES]
+    mixtures_list = base_mixtures * 2
+    
+    print(f"Mixture configuration per state: {mixtures_list}")
 
     hmm = HiddenMarkovModel(
         num_states=N_STATES, 
-        num_components_mixtures=[N_MIXTURES] * N_STATES, 
+        num_components_mixtures=mixtures_list, 
         data_dim=D
     )
     
     for i in range(N_STATES):
-        rand_idx = np.random.choice(T_train, N_MIXTURES, replace=False)
+        n_mix = hmm.states[i].M
+        rand_idx = np.random.choice(T_train, n_mix, replace=False)
         hmm.states[i].means = X_train[rand_idx]
 
     hmm.train(X_train, method='unsupervised', n_iter=100, tol=1e-4)
@@ -86,12 +104,12 @@ def main():
     print(f"Running Viterbi Decoding on {len(X_test)} samples...")
     pred_states = hmm.predict_viterbi(X_test)
 
-    analyze_results(pred_states, y_test)
+    print(analyze_results(pred_states, y_test))
     
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 8), sharex=True)
     
     ax1.plot(pred_states, label='HMM State', color='blue', marker='o', markersize=2, linestyle='None')
-    ax1.set_title("Predicted Hidden States (Unsupervised)")
+    ax1.set_title("Predicted Hidden States (Unsupervised - 12 States)")
     ax1.set_ylabel("State ID")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
