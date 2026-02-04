@@ -30,12 +30,12 @@ The core system is a custom implementation of an HMM-GMM framework. Essentially,
 * **Observations:** Continuous sensor data modeled by Gaussian Mixtures.
 * **Algorithm:**
     * **Forward-Backward:** Used for state probability inference.
-    * **Baum-Welch:** Implemented for unsupervised parameter estimation (EM algorithm).
+    * **Baum-Welch:** Implemented for unsupervised parameter estimation (EM algorithm for HMM).
     * **Viterbi:** Used to decode the most likely sequence of activities from sensor streams.
 
 ### 3. Learning Approaches
-* **Supervised:** Initializes transition matrices and emission probabilities using ground-truth labels.
-* **Unsupervised:** Learns activity patterns directly from unlabelled sensor data by optimizing log-likelihood.
+* **Supervised:** Initializes transition matrices and emission probabilities using ground-truth labels. Essentially, for each activity, the parameters of its corresponding Gaussian Mixture are estimated independently with a few iterations of the Expectation-Maximization algorithm for GMMs. These GMMs define the emission distributions for each state in the Hidden Markov Model, while the transition matrix is computed based on the maximum likelihood frequency of transitions observed in the training data.
+* **Unsupervised:** Learns activity patterns directly from unlabelled sensor data by optimizing the log-likelihood function using the Baum-Welch algorithm.
 
 ## Bibliography
 
